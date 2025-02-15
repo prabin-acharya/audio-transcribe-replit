@@ -3,6 +3,30 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+// Simple SVG Spinner component
+const Spinner = () => (
+  <svg
+    className="animate-spin h-5 w-5 mr-3 mx-2"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+  >
+    <circle
+      className="opacity-25"
+      cx="12"
+      cy="12"
+      r="10"
+      stroke="currentColor"
+      strokeWidth="3"
+    ></circle>
+    <path
+      className="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+    ></path>
+  </svg>
+);
+
 export default function Home() {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioURL, setAudioURL] = useState<string | null>(null);
@@ -49,6 +73,7 @@ export default function Home() {
     if (!audioFile) return;
     setLoading(true);
     setSummary("");
+    setTranscript("");
 
     const formData = new FormData();
     formData.append("file", audioFile);
@@ -109,11 +134,13 @@ export default function Home() {
   }, [transcript]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow p-4">
-        <h1 className="text-2xl font-bold">Audio Transcription & Summary</h1>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <header className="bg-white shadow p-4 sticky top-0 z-50">
+        <h1 className="text-2xl font-bold text-indigo-500">
+          Audio Transcription & Summary
+        </h1>
       </header>
-      <main className="p-4 max-w-3xl mx-auto">
+      <main className="p-4 max-w-3xl mx-auto flex-grow">
         <div
           onDrop={onDrop}
           onDragOver={onDragOver}
@@ -145,7 +172,6 @@ export default function Home() {
             <audio controls src={audioURL} className="w-full">
               Your browser does not support the audio element.
             </audio>
-            {/* File size display */}
             {fileSize && (
               <div className="absolute top-1 right-1 text-xs text-gray-500">
                 {fileSize} MB
@@ -157,29 +183,37 @@ export default function Home() {
         {audioFile && (
           <button
             onClick={handleTranscribe}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+            className="flex bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
             disabled={loading}
           >
-            {loading ? "Transcribing..." : "Transcribe"}
-          </button>
-        )}
-
-        {transcript && (
-          <div className="mt-6 p-4 bg-white rounded shadow">
-            {summaryLoading && (
-              <div className="mb-4">
-                <p className="text-gray-600">Summarizing....</p>
-              </div>
+            {loading ? (
+              <>
+                <span>Transcribing </span>
+                <Spinner />
+              </>
+            ) : (
+              "Transcribe"
             )}
-            <h2 className="text-xl font-semibold mb-2">Transcription</h2>
-            <p className="whitespace-pre-wrap text-gray-800">{transcript}</p>
-          </div>
+          </button>
         )}
 
         {summary && (
           <div className="mt-6 p-4 bg-white rounded shadow">
             <h2 className="text-xl font-semibold mb-2">Summary</h2>
             <p className="whitespace-pre-wrap text-gray-800">{summary}</p>
+          </div>
+        )}
+
+        {transcript && (
+          <div className="mt-6 p-4 bg-white rounded shadow">
+            {summaryLoading && (
+              <div className="mb-4 flex items-center">
+                <p className="text-gray-600">Summarizing</p>
+                <Spinner />
+              </div>
+            )}
+            <h2 className="text-xl font-semibold mb-2">Transcription</h2>
+            <p className="whitespace-pre-wrap text-gray-800">{transcript}</p>
           </div>
         )}
       </main>
