@@ -36,6 +36,7 @@ export default function Home() {
   const [summaryLoading, setSummaryLoading] = useState<boolean>(false);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const [fileSize, setFileSize] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null); // Add fileName state
 
   const handleFile = (file: File) => {
     setAudioFile(file);
@@ -43,6 +44,7 @@ export default function Home() {
     setTranscript("");
     setSummary("");
     setFileSize((file.size / (1024 * 1024)).toFixed(1));
+    setFileName(file.name); // Set file name
   };
 
   const onDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
@@ -168,15 +170,16 @@ export default function Home() {
         </div>
 
         {audioURL && (
-          <div className="mb-4 relative">
+          <div className="mb-4">
+            {/* File name and size */}
+            {fileName && (
+              <div className="text-sm text-gray-600 mb-2">
+                {fileName} ({fileSize} MB)
+              </div>
+            )}
             <audio controls src={audioURL} className="w-full">
               Your browser does not support the audio element.
             </audio>
-            {fileSize && (
-              <div className="absolute top-1 right-1 text-xs text-gray-500">
-                {fileSize} MB
-              </div>
-            )}
           </div>
         )}
 
