@@ -33,10 +33,9 @@ export async function POST(request: Request) {
     // Create the transcription job using Groq's cloud API
     const transcription = await groq.audio.transcriptions.create({
       file: fileStream,
-      model: "whisper-large-v3-turbo",
-      prompt: "english and hebrew languages",
+      model: "whisper-large-v3",
+      prompt: "interview in English and Hebrew",
       response_format: "json",
-      language: "en",
       temperature: 0.0,
     });
 
