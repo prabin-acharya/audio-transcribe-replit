@@ -1,4 +1,3 @@
-// app/page.tsx
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -36,7 +35,8 @@ export default function Home() {
   const [summaryLoading, setSummaryLoading] = useState<boolean>(false);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const [fileSize, setFileSize] = useState<string | null>(null);
-  const [fileName, setFileName] = useState<string | null>(null); // Add fileName state
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [isTranscriptOpen, setIsTranscriptOpen] = useState(true); // State for collapsible transcript
 
   const handleFile = (file: File) => {
     setAudioFile(file);
@@ -44,7 +44,8 @@ export default function Home() {
     setTranscript("");
     setSummary("");
     setFileSize((file.size / (1024 * 1024)).toFixed(1));
-    setFileName(file.name); // Set file name
+    setFileName(file.name);
+    setIsTranscriptOpen(true); // Open transcript when a new file is loaded
   };
 
   const onDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
@@ -81,13 +82,10 @@ export default function Home() {
     formData.append("file", audioFile);
 
     try {
-      const res = await fetch(
-        "https://audio-transcribe-railway-production.up.railway.app/api/transcribe",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const res = await fetch("/api/transcribe", {
+        method: "POST",
+        body: formData,
+      });
 
       if (!res.ok) {
         throw new Error("Transcription failed");
@@ -120,6 +118,7 @@ export default function Home() {
       }
       const data = await res.json();
       setSummary(data.summary);
+      setIsTranscriptOpen(false); // Collapse transcript on summary
     } catch (error) {
       console.error("Error during summarization:", error);
       setSummary("An error occurred during summarization.");
@@ -135,7 +134,7 @@ export default function Home() {
   }, [transcript]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col pb-8">
       <header className="bg-white shadow p-4 sticky top-0 z-50">
         <h1 className="text-2xl font-bold text-indigo-500">
           Audio Transcription & Summary
@@ -198,6 +197,13 @@ export default function Home() {
             )}
           </button>
         )}
+        {/* Summarizing Indicator (Outside Collapsible) */}
+        {summaryLoading && (
+          <div className="mt-4 flex items-center justify-center">
+            <p className="text-gray-600 mr-2">Summarizing</p>
+            <Spinner />
+          </div>
+        )}
 
         {summary && (
           <div className="mt-6 p-4 bg-white rounded shadow">
@@ -206,16 +212,41 @@ export default function Home() {
           </div>
         )}
 
+        {/* Transcript Collapsible Section */}
         {transcript && (
-          <div className="mt-6 p-4 bg-white rounded shadow">
-            {summaryLoading && (
-              <div className="mb-4 flex items-center">
-                <p className="text-gray-600">Summarizing</p>
-                <Spinner />
+          <div className="mt-4 bg-white rounded shadow">
+            {/* Collapsible Header */}
+            <button
+              onClick={() => setIsTranscriptOpen(!isTranscriptOpen)}
+              className="w-full flex items-center p-4 border-b border-gray-200"
+            >
+              <h2 className="text-xl font-semibold mr-4">Full Transcript</h2>
+
+              <svg
+                className={`w-5 h-5 transition-transform transform ${
+                  isTranscriptOpen ? "rotate-180" : "rotate-0"
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </button>
+            {/* Collapsible Content */}
+            {isTranscriptOpen && (
+              <div className="p-4">
+                <p className="whitespace-pre-wrap text-gray-700">
+                  {transcript}
+                </p>
               </div>
             )}
-            <h2 className="text-xl font-semibold mb-2">Transcription</h2>
-            <p className="whitespace-pre-wrap text-gray-800">{transcript}</p>
           </div>
         )}
       </main>
