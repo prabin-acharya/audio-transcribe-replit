@@ -29,8 +29,9 @@ export async function POST(request: Request) {
     // Read file from request
     const formData = await request.formData();
     const file = formData.get("file") as File;
-    if (!file)
+    if (!file) {
       return NextResponse.json({ error: "File not provided" }, { status: 400 });
+    }
 
     // Save uploaded file to temp directory
     const tempFilePath = path.join(os.tmpdir(), `${Date.now()}-${file.name}`);
@@ -47,16 +48,19 @@ export async function POST(request: Request) {
 
     if (fileSizeMB <= 25) {
       // Send directly to Groq if within size limit
-      return NextResponse.json({ text: await transcribeFile(tempFilePath) });
+      const transcript = await transcribeWithRetry(tempFilePath, 1);
+      return NextResponse.json({ text: transcript });
     }
 
     // Split audio into chunks (~20MB each)
     const chunkFiles = await splitAudio(tempFilePath);
-    console.log(`🔹 Splitting completed. ${chunkFiles.length} chunks created.`);
+    console.log(`Splitting completed. ${chunkFiles.length} chunks created.`);
 
-    // Transcribe all chunks **in parallel**
+    // Transcribe all chunks in parallel with retry logic
     console.log(`🚀 Transcribing ${chunkFiles.length} chunks in parallel...`);
-    const transcriptions = await Promise.all(chunkFiles.map(transcribeFile));
+    const transcriptions = await Promise.all(
+      chunkFiles.map((filePath) => transcribeWithRetry(filePath, 1))
+    );
 
     // Cleanup chunk files
     chunkFiles.forEach((chunk) => fs.unlinkSync(chunk));
@@ -92,11 +96,11 @@ async function splitAudio(inputFilePath: string): Promise<string[]> {
   // Calculate chunk duration (~20MB per chunk)
   const fileSizeMB = fs.statSync(inputFilePath).size / (1024 * 1024);
   const approxSizePerSecond = fileSizeMB / durationInSeconds;
-  const chunkDuration = Math.floor(20 / approxSizePerSecond); // 20MB chunks
+  const chunkDuration = Math.floor(20 / approxSizePerSecond); // for 20MB chunks
 
   console.log(`⏳ Splitting into ~${chunkDuration}s chunks...`);
 
-  // Split file into chunks
+  // Split file into chunks using FFmpeg
   const outputPattern = path.join(chunkDir, "chunk-%03d.mp3");
   await execAsync(
     `ffmpeg -i "${inputFilePath}" -f segment -segment_time ${chunkDuration} -c copy "${outputPattern}"`
@@ -123,4 +127,22 @@ async function transcribeFile(filePath: string): Promise<string> {
 
   console.log(`✅ Transcription received.`);
   return transcription.text;
+}
+
+// Wrapper function to retry Groq transcription once in case of failure
+async function transcribeWithRetry(
+  filePath: string,
+  retries: number = 1
+): Promise<string> {
+  try {
+    return await transcribeFile(filePath);
+  } catch (error) {
+    if (retries > 0) {
+      console.warn(`Transcription failed for ${filePath}. Retrying...`);
+      return await transcribeWithRetry(filePath, retries - 1);
+    } else {
+      console.error(`Transcription failed for ${filePath} after retrying.`);
+      throw error;
+    }
+  }
 }
