@@ -10,13 +10,6 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
-    // Use Groq's recommended model if not provided by the client
-    // const model = (formData.get("model") as string) || "whisper-large-v3-turbo";
-    // const prompt = (formData.get("prompt") as string) || "";
-    // const language = (formData.get("language") as string) || "en";
-    // const temperature = parseFloat(
-    //   (formData.get("temperature") as string) || "0.0"
-    // );
 
     if (!file) {
       return NextResponse.json({ error: "File not provided" }, { status: 400 });

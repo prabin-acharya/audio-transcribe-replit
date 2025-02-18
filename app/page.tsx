@@ -79,10 +79,6 @@ export default function Home() {
 
     const formData = new FormData();
     formData.append("file", audioFile);
-    formData.append("model", "whisper-large-v3-turbo");
-    formData.append("prompt", "");
-    formData.append("language", "en");
-    formData.append("temperature", "0.0");
 
     try {
       const res = await fetch("/api/transcribe", {
