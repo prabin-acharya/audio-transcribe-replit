@@ -17,7 +17,7 @@ You are a skilled language assistant specializing in Hebrew and English transcri
 Here is the full transcript to process:
 ${transcript}
 
-Please provide only the summary, with no additional commentary or explanations. And write in plain text. 
+Please provide only the summary, with no additional commentary or explanations. It should be failry detailed with about 6-8 paragraphs. And write in plain text. 
 Summary:
 `;
 
