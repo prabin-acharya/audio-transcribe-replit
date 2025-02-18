@@ -1,5 +1,5 @@
 // app/api/summarize/route.ts
-import { createOpenAI as createGithubModels } from "@ai-sdk/openai";
+import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
 
 export const maxDuration = 30;
@@ -23,13 +23,13 @@ Summary:
 `;
 
   try {
-    const githubModel = createGithubModels({
-      baseURL: "https://models.inference.ai.azure.com",
-      apiKey: process.env.GITHUB_TOKEN,
-    });
+    // const githubModel = createGithubModels({
+    //   baseURL: "https://models.inference.ai.azure.com",
+    //   apiKey: process.env.GITHUB_TOKEN,
+    // });
 
     const result = await generateText({
-      model: githubModel("gpt-4o"),
+      model: openai("gpt-4o-mini"),
       messages: [
         {
           role: "system",

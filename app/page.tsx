@@ -81,10 +81,13 @@ export default function Home() {
     formData.append("file", audioFile);
 
     try {
-      const res = await fetch("/api/transcribe", {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch(
+        "https://audio-transcribe-railway-production.up.railway.app/api/transcribe",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (!res.ok) {
         throw new Error("Transcription failed");

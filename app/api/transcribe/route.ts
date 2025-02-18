@@ -14,6 +14,7 @@ async function checkFFmpeg() {
   try {
     const { stdout } = await execAsync("ffmpeg -version");
     console.log(`✅ FFmpeg is installed. Version:`, stdout.split("\n")[0]);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     console.error("❌ FFmpeg is NOT installed or not in PATH.");
     throw new Error("FFmpeg is required but not installed.");
@@ -21,6 +22,7 @@ async function checkFFmpeg() {
 }
 
 export async function POST(request: Request) {
+  console.log("######################################################1");
   try {
     await checkFFmpeg(); // Ensure FFmpeg is installed
 
@@ -48,21 +50,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ text: await transcribeFile(tempFilePath) });
     }
 
-    // Split audio into smaller chunks
+    // Split audio into chunks (~20MB each)
     const chunkFiles = await splitAudio(tempFilePath);
     console.log(`🔹 Splitting completed. ${chunkFiles.length} chunks created.`);
 
-    // Transcribe each chunk and merge results
-    let fullTranscript = "";
-    for (const chunkPath of chunkFiles) {
-      console.log(`🎤 Transcribing: ${chunkPath}`);
-      const chunkTranscript = await transcribeFile(chunkPath);
-      fullTranscript += chunkTranscript + " ";
-      fs.unlinkSync(chunkPath); // Cleanup after transcription
-    }
+    // Transcribe all chunks **in parallel**
+    console.log(`🚀 Transcribing ${chunkFiles.length} chunks in parallel...`);
+    const transcriptions = await Promise.all(chunkFiles.map(transcribeFile));
+
+    // Cleanup chunk files
+    chunkFiles.forEach((chunk) => fs.unlinkSync(chunk));
 
     // Return combined transcript
-    return NextResponse.json({ text: fullTranscript.trim() });
+    return NextResponse.json({ text: transcriptions.join(" ").trim() });
   } catch (error) {
     console.error("❌ Error in transcription API:", error);
     return NextResponse.json(
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
   }
 }
 
-// Function to split audio into chunks using FFmpeg
+// Function to split audio into chunks (~20MB each)
 async function splitAudio(inputFilePath: string): Promise<string[]> {
   const chunkDir = path.join(os.tmpdir(), `chunks-${Date.now()}`);
   fs.mkdirSync(chunkDir);
@@ -89,10 +89,11 @@ async function splitAudio(inputFilePath: string): Promise<string[]> {
     parseInt(durationMatch[2]) * 60 +
     parseFloat(durationMatch[3]);
 
-  // Estimate chunk duration based on file size
+  // Calculate chunk duration (~20MB per chunk)
   const fileSizeMB = fs.statSync(inputFilePath).size / (1024 * 1024);
   const approxSizePerSecond = fileSizeMB / durationInSeconds;
-  const chunkDuration = Math.floor(25 / approxSizePerSecond);
+  const chunkDuration = Math.floor(20 / approxSizePerSecond); // 20MB chunks
+
   console.log(`⏳ Splitting into ~${chunkDuration}s chunks...`);
 
   // Split file into chunks
@@ -111,16 +112,15 @@ async function splitAudio(inputFilePath: string): Promise<string[]> {
 // Function to transcribe a file using Groq
 async function transcribeFile(filePath: string): Promise<string> {
   const fileStream = fs.createReadStream(filePath);
-  console.log(`#####################📤 Sending to Groq: ${filePath}`);
+  console.log(`📤 Sending to Groq: ${filePath}`);
 
   const transcription = await groq.audio.transcriptions.create({
     file: fileStream,
-    model: "whisper-large-v3",
+    model: "whisper-large-v3-turbo",
     response_format: "json",
     temperature: 0.0,
   });
 
   console.log(`✅ Transcription received.`);
-  console.log(transcription.text);
   return transcription.text;
 }
