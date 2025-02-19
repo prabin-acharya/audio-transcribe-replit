@@ -236,7 +236,7 @@ export default function Home() {
             </p>
 
             <h3 className="text-lg font-semibold mt-4 mb-1">Key Takeaways:</h3>
-            <ul className="list-disc list-inside text-gray-700 px-2">
+            <ul className="list-disc list-inside text-gray-700 px-2 pb-4">
               {summaryData.takeaways.map((takeaway, index) => (
                 <li key={index}>{takeaway}</li>
               ))}
@@ -273,7 +273,7 @@ export default function Home() {
             {/* Collapsible Content */}
             {isTranscriptOpen && (
               <div className="p-4">
-                <p className="whitespace-pre-wrap text-gray-700 px-2">
+                <p className="whitespace-pre-wrap text-gray-700 px-2 pb-4">
                   {transcript}
                 </p>
               </div>
