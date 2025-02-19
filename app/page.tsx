@@ -29,7 +29,7 @@ const Spinner = () => (
 interface SummaryData {
   summary: string;
   sentiment: string;
-  takeways: string; // Assuming takeaways are an array of strings
+  takeaways: string[];
 }
 
 export default function Home() {
@@ -137,7 +137,7 @@ export default function Home() {
         //set summary data in case of error.
         summary: "An error occurred during summarization.",
         sentiment: "N/A",
-        takeways: "N/A",
+        takeaways: [],
       });
     } finally {
       setSummaryLoading(false);
@@ -234,7 +234,11 @@ export default function Home() {
             <p className="text-gray-700">{summaryData.sentiment}</p>
 
             <h3 className="text-lg font-semibold mt-4 mb-1">Key Takeaways:</h3>
-            <p className="text-gray-700">{summaryData.takeways}</p>
+            <ul className="list-disc list-inside text-gray-700">
+              {summaryData.takeaways.map((takeaway, index) => (
+                <li key={index}>{takeaway}</li>
+              ))}
+            </ul>
           </div>
         )}
 
