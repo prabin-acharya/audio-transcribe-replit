@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-// Simple SVG Spinner component
 const Spinner = () => (
   <svg
     className="animate-spin h-5 w-5 mr-3 mx-2"
@@ -227,12 +226,14 @@ export default function Home() {
         {summaryData && (
           <div className="mt-6 p-4 bg-white rounded shadow">
             <h2 className="text-xl font-semibold mb-2">Summary</h2>
-            <p className="whitespace-pre-wrap text-gray-800 px-2">
+            <p className="whitespace-pre-wrap text-gray-800 px-2 pb-4">
               {summaryData.summary}
             </p>
 
             <h3 className="text-lg font-semibold mt-4 mb-1">Sentiment:</h3>
-            <p className="text-gray-700 px-2">{summaryData.sentiment}</p>
+            <p className="text-gray-600 font-semibold px-2 pb-4">
+              {summaryData.sentiment}
+            </p>
 
             <h3 className="text-lg font-semibold mt-4 mb-1">Key Takeaways:</h3>
             <ul className="list-disc list-inside text-gray-700 px-2">
