@@ -157,7 +157,8 @@ export default function Home() {
           Audio Transcription & Summary
         </h1>
       </header>
-      <main className="p-4 max-w-3xl mx-auto flex-grow">
+
+      <main className="p-4 max-w-3xl mx-auto w-full space-y-6">
         <div
           onDrop={onDrop}
           onDragOver={onDragOver}
@@ -184,9 +185,9 @@ export default function Home() {
           </label>
         </div>
 
+        {/* Audio Player */}
         {audioURL && (
           <div className="mb-4">
-            {/* File name and size */}
             {fileName && (
               <div className="text-sm text-gray-600 mb-2">
                 {fileName} ({fileSize} MB)
@@ -226,15 +227,15 @@ export default function Home() {
         {summaryData && (
           <div className="mt-6 p-4 bg-white rounded shadow">
             <h2 className="text-xl font-semibold mb-2">Summary</h2>
-            <p className="whitespace-pre-wrap text-gray-800">
+            <p className="whitespace-pre-wrap text-gray-800 px-2">
               {summaryData.summary}
             </p>
 
             <h3 className="text-lg font-semibold mt-4 mb-1">Sentiment:</h3>
-            <p className="text-gray-700">{summaryData.sentiment}</p>
+            <p className="text-gray-700 px-2">{summaryData.sentiment}</p>
 
             <h3 className="text-lg font-semibold mt-4 mb-1">Key Takeaways:</h3>
-            <ul className="list-disc list-inside text-gray-700">
+            <ul className="list-disc list-inside text-gray-700 px-2">
               {summaryData.takeaways.map((takeaway, index) => (
                 <li key={index}>{takeaway}</li>
               ))}
@@ -271,7 +272,7 @@ export default function Home() {
             {/* Collapsible Content */}
             {isTranscriptOpen && (
               <div className="p-4">
-                <p className="whitespace-pre-wrap text-gray-700">
+                <p className="whitespace-pre-wrap text-gray-700 px-2">
                   {transcript}
                 </p>
               </div>

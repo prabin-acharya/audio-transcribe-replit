@@ -5,7 +5,7 @@ import { z } from "zod";
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  console.log("----------------------++++++++++==++++");
+  console.log("----------------------++++++++++++++");
 
   const { transcript } = await req.json();
 
@@ -21,6 +21,30 @@ export async function POST(req: Request) {
   // Please provide only the summary, with no additional commentary or explanations. It should be failry detailed with about 6-8 paragraphs. And write in plain text.
   // Summary:
   // `;
+
+  const systemPrompt = `
+  Read and analyze the given transcript carefully and thoroughly. Take time to understand all nuances, context, and content before providing a structured analysis with these three parts:
+
+  1. SUMMARY:
+- Write 6-8 short paragraphs
+- Use English as the main language
+- Keep Hebrew terms/quotes when they are important
+- Cover all major topics from the transcript
+- Be concise but comprehensive
+
+2. SENTIMENT:
+- Describe the overall tone in 1-3 words
+- Focus on these aspects:
+  * Emotional tone (e.g., serious, joyful, inspirational)
+  * Teaching style (e.g., scholarly, conversational)
+  * Purpose (e.g., educational, historical, halachic)
+
+3. KEY TAKEAWAYS:
+- List 3-5 main points
+- Each point should be one clear, complete sentence
+- Focus on the most important lessons or insights
+- Include any crucial Hebrew concepts or terms
+  `;
 
   const prompt = `
     Full Transcript:
@@ -43,8 +67,7 @@ export async function POST(req: Request) {
       messages: [
         {
           role: "system",
-          content:
-            "You are a helpful assistant specialized in understanding and summarizing mixed Hebrew-English. From the provided full transcript, extract summary(about 6-8 paragraphs, primarily in English, but use Hebrew when appropriate, try to cover all of the major topics, points in the transcript concisely. ), sentiment(emotional tone of different sectionse.g., serious, inspirational, historical, halachic,etc 1-3 words only.), and key takeaways(3-5 key insights from the transcript).",
+          content: systemPrompt,
         },
         {
           role: "user",
