@@ -26,26 +26,32 @@ const Spinner = () => (
   </svg>
 );
 
+interface SummaryData {
+  summary: string;
+  sentiment: string;
+  takeways: string; // Assuming takeaways are an array of strings
+}
+
 export default function Home() {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioURL, setAudioURL] = useState<string | null>(null);
   const [transcript, setTranscript] = useState<string>("");
-  const [summary, setSummary] = useState<string>("");
+  const [summaryData, setSummaryData] = useState<SummaryData | null>(null); // Use the SummaryData interface
   const [loading, setLoading] = useState<boolean>(false);
   const [summaryLoading, setSummaryLoading] = useState<boolean>(false);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const [fileSize, setFileSize] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [isTranscriptOpen, setIsTranscriptOpen] = useState(true); // State for collapsible transcript
+  const [isTranscriptOpen, setIsTranscriptOpen] = useState(true);
 
   const handleFile = (file: File) => {
     setAudioFile(file);
     setAudioURL(URL.createObjectURL(file));
     setTranscript("");
-    setSummary("");
+    setSummaryData(null); // Reset summary data
     setFileSize((file.size / (1024 * 1024)).toFixed(1));
     setFileName(file.name);
-    setIsTranscriptOpen(true); // Open transcript when a new file is loaded
+    setIsTranscriptOpen(true);
   };
 
   const onDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
@@ -75,7 +81,7 @@ export default function Home() {
   const handleTranscribe = async () => {
     if (!audioFile) return;
     setLoading(true);
-    setSummary("");
+    setSummaryData(null); // Clear previous summary
     setTranscript("");
 
     const formData = new FormData();
@@ -114,14 +120,25 @@ export default function Home() {
       });
 
       if (!res.ok) {
-        throw new Error("Summary generation failed");
+        const errorData = await res.json(); // Attempt to get error details
+        throw new Error(
+          `Summary generation failed: ${res.status} - ${
+            errorData.message || "Unknown error"
+          }`
+        );
       }
-      const data = await res.json();
-      setSummary(data.summary);
-      setIsTranscriptOpen(false); // Collapse transcript on summary
+      const data = await res.json(); // Explicitly type the response
+      console.log(data, "++");
+      setSummaryData(data.summary); // Store the entire summary object
+      setIsTranscriptOpen(false);
     } catch (error) {
       console.error("Error during summarization:", error);
-      setSummary("An error occurred during summarization.");
+      setSummaryData({
+        //set summary data in case of error.
+        summary: "An error occurred during summarization.",
+        sentiment: "N/A",
+        takeways: "N/A",
+      });
     } finally {
       setSummaryLoading(false);
     }
@@ -205,10 +222,19 @@ export default function Home() {
           </div>
         )}
 
-        {summary && (
+        {/* Display Summary Data */}
+        {summaryData && (
           <div className="mt-6 p-4 bg-white rounded shadow">
             <h2 className="text-xl font-semibold mb-2">Summary</h2>
-            <p className="whitespace-pre-wrap text-gray-800">{summary}</p>
+            <p className="whitespace-pre-wrap text-gray-800">
+              {summaryData.summary}
+            </p>
+
+            <h3 className="text-lg font-semibold mt-4 mb-1">Sentiment:</h3>
+            <p className="text-gray-700">{summaryData.sentiment}</p>
+
+            <h3 className="text-lg font-semibold mt-4 mb-1">Key Takeaways:</h3>
+            <p className="text-gray-700">{summaryData.takeways}</p>
           </div>
         )}
 
@@ -218,10 +244,9 @@ export default function Home() {
             {/* Collapsible Header */}
             <button
               onClick={() => setIsTranscriptOpen(!isTranscriptOpen)}
-              className="w-full flex items-center p-4 border-b border-gray-200"
+              className="w-full flex items-center justify-between p-4 border-b border-gray-200"
             >
-              <h2 className="text-xl font-semibold mr-4">Full Transcript</h2>
-
+              <h2 className="text-xl font-semibold">Full Transcript</h2>
               <svg
                 className={`w-5 h-5 transition-transform transform ${
                   isTranscriptOpen ? "rotate-180" : "rotate-0"

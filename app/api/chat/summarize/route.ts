@@ -1,5 +1,6 @@
 import { openai } from "@ai-sdk/openai";
-import { generateText } from "ai";
+import { generateObject } from "ai";
+import { z } from "zod";
 
 export const maxDuration = 30;
 
@@ -27,26 +28,34 @@ Summary:
     //   apiKey: process.env.GITHUB_TOKEN,
     // });
 
-    const result = await generateText({
+    const result = await generateObject({
       model: openai("gpt-4o-mini"),
+      schema: z.object({
+        summary: z.string(),
+        sentiment: z.string(),
+        takeways: z.string(),
+      }),
       messages: [
         {
           role: "system",
           content:
-            "You are a helpful assistant specialized in understanding and summarizing mixed Hebrew-English content, with expertise in fixing common transcription errors in both languages.",
+            "You are a helpful assistant specialized in understanding and summarizing mixed Hebrew-English. From the provided full transcript, extract summary, sentiment, and key takeaways.",
         },
         {
           role: "user",
           content: prompt,
         },
       ],
-      temperature: 0.7, // Slightly higher temperature for more natural language
+      temperature: 0.7,
     });
 
-    const summary = result.text;
-    console.log(summary, "##");
+    console.log("^^^^^^^^^^^^^^^^^^^^^^^^^");
+    console.log(result.object);
 
-    return Response.json({ summary });
+    // const summary = result.text;
+    // console.log(summary, "##");
+
+    return Response.json({ summary: result.object });
   } catch (error) {
     console.error("Error generating summary:", error);
     return new Response(
