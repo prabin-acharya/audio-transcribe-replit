@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Transcribe Audio",
-  description: "Built by Prabin",
+  description: "",
 };
 
 export default function RootLayout({
