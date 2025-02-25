@@ -1,4 +1,4 @@
-import { createOpenAI as createGithubModels } from "@ai-sdk/openai";
+import { openai } from "@ai-sdk/openai";
 
 import { generateObject } from "ai";
 import { z } from "zod";
@@ -6,7 +6,7 @@ import { z } from "zod";
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  console.log("----------------------++++++++++++++");
+  console.log("----------------------------------------------");
 
   const { transcript } = await req.json();
 
@@ -73,13 +73,8 @@ Ensure that the summary adopts an engaging, conversational tone that mirrors the
     `;
 
   try {
-    const githubModel = createGithubModels({
-      baseURL: "https://models.inference.ai.azure.com",
-      apiKey: process.env.GITHUB_TOKEN,
-    });
-
     const result = await generateObject({
-      model: githubModel("gpt-4o"),
+      model: openai("gpt-4o"),
       schema: z.object({
         summary: z.string(),
       }),
@@ -111,25 +106,3 @@ Ensure that the summary adopts an engaging, conversational tone that mirrors the
     );
   }
 }
-
-//   1. SUMMARY:
-// - Write 6-8 short paragraphs
-// - Use English as the main language
-// - Keep Hebrew terms/quotes when they are important
-// - Cover all major topics from the transcript
-// - Be concise but comprehensive
-// - When using Hebrew words, provide the English term first, followed by the Hebrew in brackets
-
-// 2. SENTIMENT:
-// - Describe the overall tone in 1-3 words
-// - Focus on these aspects:
-//   * Emotional tone (e.g., serious, joyful, inspirational)
-//   * Teaching style (e.g., scholarly, conversational)
-//   * Purpose (e.g., educational, historical, halachic)
-
-// 3. KEY TAKEAWAYS:
-// - List 3-5 main points
-// - Each point should be one clear, complete sentence
-// - Focus on the most important lessons or insights
-// - Include any crucial Hebrew concepts or terms
-// - When using Hebrew words, provide the English term first, followed by the Hebrew in brackets

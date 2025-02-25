@@ -1,13 +1,15 @@
 import { exec } from "child_process";
 import fs from "fs";
-import Groq from "groq-sdk";
 import { NextResponse } from "next/server";
+import OpenAI from "openai";
 import os from "os";
 import path from "path";
 import { promisify } from "util";
 
+export const maxDuration = 100;
+
 const execAsync = promisify(exec);
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Function to check FFmpeg installation
 async function checkFFmpeg() {
@@ -47,7 +49,7 @@ export async function POST(request: Request) {
     );
 
     if (fileSizeMB <= 25) {
-      // Send directly to Groq if within size limit
+      // Send directly to OpenAI Whisper if within size limit
       const transcript = await transcribeWithRetry(tempFilePath, 1);
       return NextResponse.json({ text: transcript });
     }
@@ -113,23 +115,22 @@ async function splitAudio(inputFilePath: string): Promise<string[]> {
   return chunkFiles;
 }
 
-// Function to transcribe a file using Groq
+// Function to transcribe a file using OpenAI Whisper
 async function transcribeFile(filePath: string): Promise<string> {
   const fileStream = fs.createReadStream(filePath);
-  console.log(`📤 Sending to Groq: ${filePath}`);
+  console.log(`📤 Sending to OpenAI Whisper: ${filePath}`);
 
-  const transcription = await groq.audio.transcriptions.create({
+  const transcription = await openai.audio.transcriptions.create({
     file: fileStream,
-    model: "whisper-large-v3-turbo",
-    response_format: "json",
-    temperature: 0.0,
+    model: "whisper-1",
   });
 
   console.log(`✅ Transcription received.`);
+  console.log(transcription, "###");
   return transcription.text;
 }
 
-// Wrapper function to retry Groq transcription once in case of failure
+// Wrapper function to retry OpenAI Whisper transcription once in case of failure
 async function transcribeWithRetry(
   filePath: string,
   retries: number = 1
